@@ -1,0 +1,37 @@
+type EventPayload = record {
+  startTime : text;
+  title : text;
+  endTime : text;
+  date : text;
+  description : text;
+  location : text;
+};
+type EventRecord = record {
+  id : text;
+  startTime : text;
+  title : text;
+  endTime : text;
+  date : text;
+  createdAt : nat64;
+  description : text;
+  updatedAt : opt nat64;
+  location : text;
+};
+type _AzleResult = variant { Ok : EventRecord; Err : text };
+type _AzleResult_1 = variant { Ok : vec EventRecord; Err : text };
+service : () -> {
+  addEvent : (EventPayload) -> (_AzleResult);
+  deleteEvent : (text) -> (_AzleResult);
+  filterEventsByDateRange : (text, text) -> (_AzleResult_1) query;
+  filterEventsByLocation : (text) -> (_AzleResult_1) query;
+  getEvent : (text) -> (_AzleResult) query;
+  getEvents : () -> (_AzleResult_1) query;
+  getEventsCreatedAfter : (nat64) -> (_AzleResult_1) query;
+  getUpcomingEvents : (text) -> (_AzleResult_1) query;
+  paginateEvents : (float64, float64) -> (_AzleResult_1) query;
+  searchEventsByDate : (text) -> (_AzleResult_1) query;
+  searchEventsByTitle : (text) -> (_AzleResult_1) query;
+  updateEvent : (text, EventPayload) -> (_AzleResult);
+  updateEventEndTime : (text, text) -> (_AzleResult);
+  updateEventStartTime : (text, text) -> (_AzleResult);
+}
