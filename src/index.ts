@@ -26,48 +26,95 @@ type EventPayload = Record<{
 // Create a map to store event records
 const eventStorage = new StableBTreeMap<string, EventRecord>(0, 44, 1024);
 
+// Function to add a new event
 $update;
 export function addEvent(payload: EventPayload): Result<EventRecord, string> {
-    const record: EventRecord = { id: uuidv4(), createdAt: ic.time(), updatedAt: Opt.None, ...payload };
-    eventStorage.insert(record.id, record);
-    return Result.Ok(record);
+    try {
+        // Validate input
+        const { title, date, startTime, endTime, location, description } = payload;
+        if (!title || !date || !startTime || !endTime || !location || !description) {
+            return Result.Err<EventRecord, string>('Invalid input. Please provide all required fields.');
+        }
+
+        // Create and insert the event record
+        const record: EventRecord = {
+            id: uuidv4(),
+            createdAt: ic.time(),
+            updatedAt: Opt.None,
+            ...payload
+        };
+        eventStorage.insert(record.id, record);
+        return Result.Ok(record);
+    } catch (error: unknown) {
+        return Result.Err<EventRecord, string>(`Error adding event: ${(error as Error).message}`);
+    }
 }
 
+// Function to update an existing event
 $update;
 export function updateEvent(id: string, payload: EventPayload): Result<EventRecord, string> {
-    return match(eventStorage.get(id), {
-        Some: (record) => {
-            const updatedRecord: EventRecord = {...record, ...payload, updatedAt: Opt.Some(ic.time())};
-            eventStorage.insert(record.id, updatedRecord);
-            return Result.Ok<EventRecord, string>(updatedRecord);
-        },
-        None: () => Result.Err<EventRecord, string>(`Event with id=${id} not found`)
-    });
+    try {
+        // Validate input
+        const { title, date, startTime, endTime, location, description } = payload;
+        if (!title || !date || !startTime || !endTime || !location || !description) {
+            return Result.Err<EventRecord, string>('Invalid input. Please provide all required fields.');
+        }
+
+        // Update the event record
+        return match(eventStorage.get(id), {
+            Some: (record) => {
+                const updatedRecord: EventRecord = {
+                    ...record,
+                    ...payload,
+                    updatedAt: Opt.Some(ic.time())
+                };
+                eventStorage.insert(record.id, updatedRecord);
+                return Result.Ok(updatedRecord);
+            },
+            None: () => Result.Err<EventRecord, string>(`Event with id=${id} not found`)
+        });
+    } catch (error: unknown) {
+        return Result.Err<EventRecord, string>(`Error updating event: ${(error as Error).message}`);
+    }
 }
 
+// Function to delete an event
 $update;
 export function deleteEvent(id: string): Result<EventRecord, string> {
-    return match(eventStorage.remove(id), {
-        Some: (deletedRecord) => Result.Ok<EventRecord, string>(deletedRecord),
-        None: () => Result.Err<EventRecord, string>(`Event with id=${id} not found`)
-    });
+    try {
+        return match(eventStorage.remove(id), {
+            Some: (deletedRecord) => Result.Ok<EventRecord, string>(deletedRecord),
+            None: () => Result.Err<EventRecord, string>(`Event with id=${id} not found`)
+        });
+    } catch (error: unknown) {
+        return Result.Err<EventRecord, string>(`Error deleting event: ${(error as Error).message}`);
+    }
 }
 
+// Function to retrieve a specific event by ID
 $query;
 export function getEvent(id: string): Result<EventRecord, string> {
-    return match(eventStorage.get(id), {
-        Some: (record) => Result.Ok<EventRecord, string>(record),
-        None: () => Result.Err<EventRecord, string>(`Event with id=${id} not found`)
-    });
+    try {
+        return match(eventStorage.get(id), {
+            Some: (record) => Result.Ok<EventRecord, string>(record),
+            None: () => Result.Err<EventRecord, string>(`Event with id=${id} not found`)
+        });
+    } catch (error: unknown) {
+        return Result.Err<EventRecord, string>(`Error retrieving event: ${(error as Error).message}`);
+    }
 }
 
+// Function to retrieve all events
 $query;
 export function getEvents(): Result<Vec<EventRecord>, string> {
-    return Result.Ok(eventStorage.values());
+    try {
+        return Result.Ok(eventStorage.values());
+    } catch (error: unknown) {
+        return Result.Err<Vec<EventRecord>, string>(`Error retrieving events: ${(error as Error).message}`);
+    }
 }
 
 // Additional functions for event management can be added here, such as searching by date, filtering by location, etc.
-
 // Function to search events by date
 $query;
 export function searchEventsByDate(date: string): Result<Vec<EventRecord>, string> {
